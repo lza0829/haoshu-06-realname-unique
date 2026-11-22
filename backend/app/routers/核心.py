@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.db import 夹具目录, 连接
-from app.services import 装载, 贯验, 目录
+from app.services import 装载, 贯验, 目录, 实名
 
 路由 = APIRouter(prefix="/api")
 
@@ -123,6 +123,12 @@ def 列贯验():
         return [dict(r) for r in conn.execute("SELECT * FROM 金库贯验 ORDER BY 编号 DESC LIMIT 20")]
     finally:
         conn.close()
+
+
+@路由.get("/贯验/实名唯一")
+def 查实名唯一():
+    """实名唯一贯验只读接口：号卡 → 有效客户 → 替换或拒绝证据。只读不写。"""
+    return 实名.实名唯一概览()
 
 
 @路由.get("/空桩")

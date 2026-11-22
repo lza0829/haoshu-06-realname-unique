@@ -4,6 +4,7 @@ from typing import Any
 
 from app.db import 连接
 from app.seed import 哈希键, 载荷哈希, 此刻
+from app.services.实名 import 实名冲突, 记拒绝证据
 
 
 def 装一批(体: dict[str, Any]) -> dict[str, Any]:
@@ -80,6 +81,15 @@ def 装一批(体: dict[str, Any]) -> dict[str, Any]:
             if conn.execute("SELECT 1 FROM 链接_号卡客户 WHERE 哈希键=?", (lh,)).fetchone():
                 报["跳过"] += 1
                 continue
+            # 实名写闸（甲口径：先到保留、后到拒绝）：该卡已有有效实名且客户不同 → 整批失败闭
+            现 = conn.execute(
+                "SELECT 客户哈希 FROM 链接_号卡客户 WHERE 号卡哈希=?", (hk卡,)
+            ).fetchone()
+            if 现:
+                保留 = conn.execute(
+                    "SELECT 业务键 FROM 枢纽_客户 WHERE 哈希键=?", (现["客户哈希"],)
+                ).fetchone()
+                raise 实名冲突(号, 保留["业务键"] if 保留 else 现["客户哈希"], 客, 批号)
             conn.execute(
                 "INSERT INTO 链接_号卡客户(哈希键, 号卡哈希, 客户哈希, 装载日) VALUES (?,?,?,?)",
                 (lh, hk卡, hk客, 装载日),
@@ -142,6 +152,15 @@ def 装一批(体: dict[str, Any]) -> dict[str, Any]:
         )
         conn.commit()
         return {"结果": "成功", "批次编号": 批号, "装载日": 装载日, "报告": 报}
+    except 实名冲突 as e:
+        conn.rollback()
+        记拒绝证据(conn, e)
+        conn.execute(
+            "INSERT INTO 隔离匣(原因, 载荷, 时刻) VALUES (?,?,?)",
+            (str(e), json.dumps(体, ensure_ascii=False)[:2000], 此刻()),
+        )
+        conn.commit()
+        return {"结果": "失败", "说明": str(e), "处置": "后到拒绝", "批次编号": 批号}
     except Exception as e:
         conn.rollback()
         conn.execute(

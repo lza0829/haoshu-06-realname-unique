@@ -1,5 +1,6 @@
 from app.db import 连接
 from app.seed import 此刻
+from app.services import 实名
 
 
 def 跑贯验() -> dict:
@@ -53,6 +54,8 @@ def 跑贯验() -> dict:
             ):
                 双当前.append(f"{表}:{r['p']}")
 
+        双实名 = 实名.查双实名(conn)
+
         检项 = [
             {
                 "名": "链接两端可解",
@@ -69,8 +72,15 @@ def 跑贯验() -> dict:
                 "通过": len(双当前) == 0,
                 "说明": "同父键仅一条当前卫星" if not 双当前 else "；".join(双当前[:6]),
             },
+            {
+                "名": "实名链接唯一",
+                "通过": len(双实名) == 0,
+                "说明": "每号卡至多一条有效实名链接（先到保留）" if not 双实名 else "；".join(双实名[:6]),
+            },
         ]
-        问题 = 缺链 + [f"孤儿卫星:{x}" for x in 孤儿] + [f"双当前:{x}" for x in 双当前]
+        问题 = 缺链 + [f"孤儿卫星:{x}" for x in 孤儿] + [f"双当前:{x}" for x in 双当前] + [
+            f"双实名:{x}" for x in 双实名
+        ]
         通过 = 0 if 问题 else 1
         说明 = "；".join(问题) if 问题 else "枢纽、链接、卫星引用与当前版贯穿互证通过"
         conn.execute(

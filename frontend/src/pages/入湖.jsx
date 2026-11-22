@@ -25,6 +25,12 @@ export default function 入湖(){
       <button className="次" onClick={()=>灌("套餐升档样例")} disabled={!!忙}>
         {忙==="套餐升档样例"?"灌入中…":"灌入套餐升档（卫星开版）"}
       </button>
+      <button className="次" onClick={()=>灌("实名冲突样例")} disabled={!!忙}>
+        {忙==="实名冲突样例"?"灌入中…":"灌实名冲突（李四冲张三·应拒）"}
+      </button>
+      <button className="次" onClick={()=>灌("实名半替换样例")} disabled={!!忙}>
+        {忙==="实名半替换样例"?"灌入中…":"灌半替换（应整批回滚）"}
+      </button>
     </div>
 
     {!报 && <div className="空态">尚未装载。先灌样例，再到枢纽 / 链接 / 卫星查看落库。</div>}

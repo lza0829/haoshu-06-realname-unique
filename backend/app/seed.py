@@ -79,6 +79,15 @@ CREATE TABLE IF NOT EXISTS 隔离匣 (
   载荷 TEXT NOT NULL,
   时刻 TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS 实名冲突证据 (
+  编号 INTEGER PRIMARY KEY AUTOINCREMENT,
+  号卡业务键 TEXT NOT NULL,
+  保留客户业务键 TEXT NOT NULL,
+  冲突客户业务键 TEXT NOT NULL,
+  批号 TEXT NOT NULL,
+  处置 TEXT NOT NULL,
+  时刻 TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS 金库贯验 (
   编号 INTEGER PRIMARY KEY AUTOINCREMENT,
   时刻 TEXT NOT NULL,
@@ -114,5 +123,9 @@ def 初始化库() -> None:
     if conn.execute("SELECT COUNT(*) AS c FROM 站规").fetchone()["c"] == 0:
         for k, v in {"站名": "号枢", "默认装载日": "2026-11-21"}.items():
             conn.execute("INSERT INTO 站规(键, 值) VALUES (?, ?)", (k, v))
+    conn.execute(
+        "INSERT OR IGNORE INTO 站规(键, 值) VALUES (?, ?)",
+        ("实名冲突口径", "先到保留·后到拒绝·失败闭"),
+    )
     conn.commit()
     conn.close()
